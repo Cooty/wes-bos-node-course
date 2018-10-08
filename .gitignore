@@ -48,6 +48,9 @@ Temporary Items
 # Node.js modules
 node_modules/
 
+# Vagrant
+.vagrant/
+
 # SASS cache
 scss/.sass-cache/
 
@@ -56,3 +59,5 @@ scss/.sass-cache/
 
 # KomodoEdit projectfiles
 *.kpf
+variables.env
+yarn-error.log

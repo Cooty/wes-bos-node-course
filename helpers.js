@@ -27,3 +27,7 @@ exports.menu = [
   { slug: '/add', title: 'Add', icon: 'add', },
   { slug: '/map', title: 'Map', icon: 'map', },
 ];
+
+exports.maxWords = (string, wordCount) => {
+    return string.split(' ').slice(0, wordCount).join(' ');
+}

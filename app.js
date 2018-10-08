@@ -44,6 +44,10 @@ app.use(session({
 }));
 
 // // Passport JS is what we use to handle our logins
+
+// This .use() call is adding global middleware to the app
+// so the output of that middleware will be available anywhere inside the app
+// it runs BEFORE the request even hits the app
 app.use(passport.initialize());
 app.use(passport.session());
 

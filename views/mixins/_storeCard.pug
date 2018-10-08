@@ -1,0 +1,22 @@
+mixin storeCard(store = {})
+    -
+        const {
+            photo,
+            name,
+            _id,
+            slug,
+            description,
+        } = store;
+
+
+    .store(id=id)
+        .store__hero
+            .store__actions
+                .store__action.store__action--edit
+                    a(href=`stores/${_id}/edit`)!= h.icon('pencil')
+            img(src=`/uploads/${photo || 'store.png'}` alt=name)
+            h2.title
+                a(href=`/stores/${slug}`)= name
+        .store__details
+            p= h.maxWords(description, 25)
+
