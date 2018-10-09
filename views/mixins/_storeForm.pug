@@ -10,6 +10,15 @@ mixin storeForm(store = {})
         textarea(cols="30", rows="5" name="description" id="description")
             = store.description ? store.description : ''
 
+        label(for="address") Address
+        input(type="text" id="address" name="location[address]" value=(store.location && store.location.address))
+
+        label(for="lng") Address LNG
+        input(type="text" id="lng" name="location[coordinates][0]" required value=(store.location && store.location.coordinates && store.location.coordinates[0]))
+
+        label(for="lat") Address LAT
+        input(type="text" id="lat" name="location[coordinates][1]" required value=(store.location && store.location.coordinates && store.location.coordinates[1]))
+
         -
             const choices = [
                 'WiFi',

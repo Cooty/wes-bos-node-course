@@ -17,6 +17,29 @@ const storeSchema = new mongoose.Schema({
         trim: true,
     },
     tags: [String], // needs to be an Array of Strings
+    created: {
+        // you can also store Unix timestamps, but the built in Date-type in Mongo ismuch smarter, enables custom queries and filters
+        type: Date,
+        default: Date.now
+    },
+    location: {
+        type: {
+            // yeah that's how you give a location-point type to Mongo, kinda wierd...
+            type: String,
+            default: 'Point'
+        },
+        // Array cause there are more of them
+        coordinates: [
+            {
+                type: Number,
+                required: 'You must add coordinates'
+            },
+        ],
+        address: {
+            type: String,
+            required: 'You must supply an address!'
+        }
+    }
 });
 
 // Presave hook for MongoDB - stuff to do before saving data
