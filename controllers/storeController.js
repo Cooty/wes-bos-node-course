@@ -31,6 +31,7 @@ exports.editStore = async (req, res) => {
 };
 
 exports.updateStore = async (req, res) => {
+    req.body.location.type = 'Point';
     const store = await Store.findOneAndUpdate(
         {_id: req.params.id}, // query to find the store
         req.body, // 2) the data to update - in this case these are the posted form fields
