@@ -1,8 +1,7 @@
 mixin storeForm(store = {})
-    form.card(method="POST" action=`/add/${store._id || '' }`)
+    form.card(method="POST" enctype="multipart/form-data" action=`/add/${store._id || '' }`)
         //- The 'name' attributes that are sent with the form
         //- must match the fields defined in our Schema (see: models/Store.js)
-
         label(for="name") Name
         input(type="text" name="name" id="name" value=store.name ? store.name : false)
 
@@ -10,15 +9,34 @@ mixin storeForm(store = {})
         textarea(cols="30", rows="5" name="description" id="description")
             = store.description ? store.description : ''
 
+        label(for="photo") Photo
+            input(type="file" name="photo" accept="image/gif, image/jpeg, image/jpeg")
+            if store.photo
+                img(src=`/uploads/${store.photo}` alt=store.name width="200")
+
         label(for="address") Address
-        input(type="text" id="address" name="location[address]" value=(store.location && store.location.address))
+        input(
+            type="text"
+            id="address"
+            name="location[address]"
+            value=(store.location && store.location.address))
 
         label(for="lng") Address LNG
-        input(type="text" id="lng" name="location[coordinates][0]" required value=(store.location && store.location.coordinates && store.location.coordinates[0]))
+        input(
+            type="text"
+            id="lng"
+            name="location[coordinates][0]"
+            required
+            value=(store.location && store.location.coordinates && store.location.coordinates[0]))
 
         label(for="lat") Address LAT
-        input(type="text" id="lat" name="location[coordinates][1]" required value=(store.location && store.location.coordinates && store.location.coordinates[1]))
-
+        input(
+            type="text"
+            id="lat"
+            name="location[coordinates][1]"
+            required
+            value=(store.location && store.location.coordinates && store.location.coordinates[1])
+        )
         -
             const choices = [
                 'WiFi',
@@ -31,7 +49,13 @@ mixin storeForm(store = {})
         ul.tags
             each choice in choices
                 li.tag.tag__choice
-                    input(type="checkbox" id=choice value=choice name="tags" checked=(tags.includes(choice)))
+                    input(
+                        type="checkbox"
+                        id=choice
+                        value=choice
+                        name="tags"
+                        checked=(tags.includes(choice))
+                    )
                     label(for=choice)= choice
 
         input.button(type="submit" value="Save")

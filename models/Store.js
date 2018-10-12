@@ -39,7 +39,8 @@ const storeSchema = new mongoose.Schema({
             type: String,
             required: 'You must supply an address!'
         }
-    }
+    },
+    photo: String,
 });
 
 // Presave hook for MongoDB - stuff to do before saving data

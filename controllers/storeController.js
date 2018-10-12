@@ -1,5 +1,26 @@
 const mongoose = require('mongoose');
 const Store = mongoose.model('Store');
+const multer = require('multer');
+const jimp = require('jimp');
+const uuid = require('uuid');
+
+const multerOptions = {
+    storage: multer.memoryStorage(), // we'll keep the image in memory, resize it, then save it to disk
+    fileFilter: (req, file, next) => { // this is very we limit filetype uploads
+        // testing for MIME-type is much reliable then checking the extension...
+        const isImage = file.mimetype.startsWith('image/');
+
+        if(isImage) {
+            // typical Node.js pattern
+            // if you pass in anything truthy as the 1st argument then it means it's an error
+            // if passing in null as the 1st argument and true as the 2nd it means it worked
+            // and the 2nd value will get passed forward to the next handler
+            next(null, true);
+        } else {
+            next({message: 'That file type isn\'t allowed'}, false);
+        }
+    }
+};
 
 exports.homePage = (req, res) => {
     res.render('index');
@@ -9,12 +30,34 @@ exports.addStore = (req, res) => {
     res.render('editStore', {title: 'Add Store'});
 };
 
+exports.upload = multer(multerOptions).single('photo');
+
+exports.resize = async (req, res, next) => {
+    // need to check if the user actually added the file
+    // it can also be and edit operation and in that case no new image is posted
+    // req.file is appended by multer...
+    if(!req.file) {
+        // just call next - so pass on the request to the next function
+        next();
+        return;
+    }
+
+    const extension = req.file.mimetype.split('/')[1];
+    req.body.photo = `${uuid.v4()}.${extension}`;
+
+    // Now for the resizing;
+    const photo = await jimp.read(req.file.buffer);
+    await photo.resize(800, jimp.AUTO);
+    await photo.write(`./public/uploads/${req.body.photo}`);
+    next();
+};
+
 exports.createStore = async (req, res) => {
     // Because our schema is strict, if someone would post anything else that
     // does not match our schema definitions it just gets thrown away
     const store = await (new Store(req.body)).save(); // instantiate the a new Store which is based on our schema
 
-    req.flash('success', `Successfully created ${store.name}! Care to leave a review?`);
+    req.flash('success', `Successfully created ${store.name}! Care to leave a <a href="/reviews/${store.slug}">review</a>?`);
     res.redirect(`/store/${store.slug}`);
 };
 
@@ -31,7 +74,9 @@ exports.editStore = async (req, res) => {
 };
 
 exports.updateStore = async (req, res) => {
-    req.body.location.type = 'Point';
+    if(req.body.location) {
+        req.body.location.type = 'Point';
+    }
     const store = await Store.findOneAndUpdate(
         {_id: req.params.id}, // query to find the store
         req.body, // 2) the data to update - in this case these are the posted form fields
