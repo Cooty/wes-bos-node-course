@@ -57,13 +57,14 @@ exports.createStore = async (req, res) => {
     // does not match our schema definitions it just gets thrown away
     const store = await (new Store(req.body)).save(); // instantiate the a new Store which is based on our schema
 
-    req.flash('success', `Successfully created ${store.name}! Care to leave a <a href="/reviews/${store.slug}">review</a>?`);
-    res.redirect(`/store/${store.slug}`);
+    req.flash(
+        'success',
+        `Successfully created ${store.name}. Care to leave a review?`);
+    res.redirect(`/stores/${store.slug}`);
 };
 
 exports.getStores = async (req, res) => {
     const stores = await Store.find();
-    console.log(stores);
     res.render('stores', { title: 'Stores', stores });
 };
 
@@ -92,4 +93,14 @@ exports.updateStore = async (req, res) => {
         <a href="/stores/${store.slug}">View it here!</a>!`
     );
     res.redirect(`/stores/${store._id}/edit`);
+};
+
+exports.getStoreBySlug = async (req, res, next) => {
+    const store = await Store.findOne({ slug: req.params.slug });
+    // handle 'not found' stores, since mongoDB will return null if the user enters a non-existing slug
+    if(!store) {
+        next();
+        return;
+    }
+    res.render('store', { title: store.name, store });
 };

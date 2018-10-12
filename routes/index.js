@@ -10,6 +10,7 @@ const {
     updateStore,
     upload,
     resize,
+    getStoreBySlug
 } = storeController;
 
 // Do work here
@@ -24,6 +25,7 @@ router.post(
     catchErrors(createStore)
 );
 router.get('/stores', catchErrors(getStores));
+router.get('/stores/:slug', catchErrors(getStoreBySlug));
 router.get('/stores/:id/edit', catchErrors(editStore));
 router.post(
     '/add/:id',

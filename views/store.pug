@@ -1,0 +1,32 @@
+extends layout
+
+block content
+    -
+        const {
+            photo,
+            name,
+            description,
+            slug,
+            location,
+            tags,
+        } = store;
+
+    article.single
+        header.single__hero
+            img.single__image(src=`/uploads/${photo || 'store.png'}` alt=store.name)
+            h2.title.title--single
+                a(href=`/stores/${slug}`)=name
+
+        .single__details.inner
+            img.single__map(src=h.staticMap(location.coordinates) alt=name)
+
+            p.single__location= location.address
+
+            p= description
+
+            if tags && tags.length
+                ul.tags
+                    each tag in tags
+                        li.tag
+                            a.tag__link(href=`/tags/${tag}`)
+                                span.tag__text ##{tag}

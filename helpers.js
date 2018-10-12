@@ -31,3 +31,16 @@ exports.menu = [
 exports.maxWords = (string, wordCount) => {
     return string.split(' ').slice(0, wordCount).join(' ');
 }
+
+exports.isEmptyObject = (object = {}) => {
+    // If the helper receives invalid data
+    // just give the result like it were an empty object
+    // since that's the most likely thing a user would want
+    if (!object || typeof object !== 'object') {
+        return isEmptyObject();
+    } else {
+        return (
+            Object.keys(object).length === 0 && object.constructor === Object
+        );
+    }
+};
