@@ -43,6 +43,19 @@ const storeSchema = new mongoose.Schema({
     photo: String,
 });
 
+storeSchema.statics.getTagsList = function() {
+    return this.aggregate([
+        { $unwind: '$tags' },
+        {
+            $group: {
+                _id: '$tags',
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { count: -1 } }
+    ]);
+};
+
 // Presave hook for MongoDB - stuff to do before saving data
 // we autogenerate 'slug'
 // 2nd argument needs to be a real function instead of an () => {}

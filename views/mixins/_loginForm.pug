@@ -1,0 +1,13 @@
+mixin loginForm()
+    form.form(action="/do-login" method="POST")
+        h2= title
+
+        input(type="hidden" readonly name="redirectPath" value=redirectPath)
+
+        label(for="email") E-mail
+        input(type="email" name="email" id="email")
+
+        label(for="password") Password
+        input(type="password" name="password" id="password")
+
+        input.button(type="submit" value="Log In ")

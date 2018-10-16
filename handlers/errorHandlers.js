@@ -37,7 +37,8 @@ exports.flashValidationErrors = (err, req, res, next) => {
   res.redirect('back');
 };
 
-
+const setStatusCode = (status) => status || 500;
+const getErrorTitle = (statusCode) => statusCode === 404 ? 'Page not found 🚧' : 'Error 😥';
 /*
   Development Error Handler
 
@@ -50,7 +51,8 @@ exports.developmentErrors = (err, req, res, next) => {
     status: err.status,
     stackHighlighted: err.stack.replace(/[a-z_-\d]+.js:\d+:\d+/gi, '<mark>$&</mark>')
   };
-  res.status(err.status || 500);
+  res.status(setStatusCode(err.status));
+  res.locals.title = getErrorTitle(err.status);
   res.format({
     // Based on the `Accept` http header
     'text/html': () => {
@@ -67,7 +69,8 @@ exports.developmentErrors = (err, req, res, next) => {
   No stacktraces are leaked to user
 */
 exports.productionErrors = (err, req, res, next) => {
-  res.status(err.status || 500);
+  res.status(setStatusCode(err.status));
+  res.locals.title = getErrorTitle(err.status);
   res.render('error', {
     message: err.message,
     error: {}

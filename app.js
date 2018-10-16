@@ -12,6 +12,8 @@ const expressValidator = require('express-validator');
 const routes = require('./routes/index');
 const helpers = require('./helpers');
 const errorHandlers = require('./handlers/errorHandlers');
+// invoke our configured Passport...
+require('./handlers/passport');
 
 // create our Express app
 const app = express();
@@ -59,7 +61,7 @@ app.use(flash());
 app.use((req, res, next) => {
   res.locals.h = helpers;
   res.locals.flashes = req.flash();
-  res.locals.user = req.user || null;
+  res.locals.user = req.user || null; // Passport appends the user obj to each request if it's there
   res.locals.currentPath = req.path;
   next();
 });

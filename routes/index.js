@@ -1,37 +1,58 @@
 const express = require('express');
 const router = express.Router();
 const storeController = require('../controllers/storeController');
+const userController = require('../controllers/userController');
+const authController = require('../controllers/authController');
 const { catchErrors } = require('../handlers/errorHandlers');
-const {
-    addStore,
-    createStore,
-    getStores,
-    editStore,
-    updateStore,
-    upload,
-    resize,
-    getStoreBySlug
-} = storeController;
 
 // Do work here
-router.get('/', catchErrors(getStores));
+router.get('/', catchErrors(storeController.getStores));
 // Handle GETTING stuff
-router.get('/add', addStore);
+router.get(
+    '/add',
+    // before we handle rendering the page we call the auth middleware to check for logged in state
+    authController.isLoggedIn,
+    storeController.addStore
+);
 // Handle POSTING stuff
 router.post(
     '/add',
-    upload,
-    catchErrors(resize),
-    catchErrors(createStore)
+    storeController.upload,
+    catchErrors(storeController.resize),
+    catchErrors(storeController.createStore)
 );
-router.get('/stores', catchErrors(getStores));
-router.get('/stores/:slug', catchErrors(getStoreBySlug));
-router.get('/stores/:id/edit', catchErrors(editStore));
+router.get('/stores', catchErrors(storeController.getStores));
+router.get('/stores/:slug', catchErrors(storeController.getStoreBySlug));
+router.get('/stores/:id/edit', catchErrors(storeController.editStore));
 router.post(
     '/add/:id',
-    upload,
-    catchErrors(resize),
-    catchErrors(updateStore)
+    storeController.upload,
+    catchErrors(storeController.resize),
+    catchErrors(storeController.updateStore)
 );
+router.get('/tags', catchErrors(storeController.getStoresByTag));
+router.get('/tags/:tag', catchErrors(storeController.getStoresByTag));
+router.get('/login', userController.loginForm);
+router.post(
+    '/do-login',
+    authController.login
+);
+router.get('/register', userController.registerForm);
+// 1. Validate the data (server side validation if it would pass client-side validation, before it hits the DB Schema)
+// 2. Register the user (write to DB)
+// 3. Log the user in
+router.post(
+    '/register',
+    userController.validateRegister,
+    userController.register,
+    authController.login
+);
+router.get('/logout', authController.logout);
+router.get(
+    '/account',
+    authController.isLoggedIn,
+    userController.account
+);
+router.post('/account', catchErrors(userController.updateAccount));
 
 module.exports = router;
