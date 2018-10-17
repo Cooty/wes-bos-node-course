@@ -1,4 +1,8 @@
 const passport = require('passport');
+const mongoose = require('mongoose');
+const User = mongoose.model('User');
+const crypto = require('crypto');
+const promisify = require('es6-promisify');
 
 // This is Wes's original code, the problem with it is that I can't implement
 // dynamic redirects when I want to pass an authentication-only url that
@@ -61,5 +65,79 @@ exports.isLoggedIn = (req, res, next) => {
     }
     redirectQuery = req.route.path && req.route.path !== '/' ? `?redirectPath=${req.route.path}` : '';
     req.flash('error', 'You need to be logged in!');
-    res.redirect(`/login${redirectQuery}`);
+    return res.redirect(`/login${redirectQuery}`);
+};
+
+exports.forgot = async (req, res) => {
+    // 1) Check if the user associated with the email address sent exists
+    const user = await User.findOne({ email: req.body.email });
+
+    if(!user) {
+        req.flash('error', 'We\'ve sent you a password rest...'); // exposing emails is not a good idea...
+        return res.redirect('/login');
+    }
+    // 2) If it exists: set a password recovery token and a token expiry time for that account
+    user.resetPasswordToken = crypto.randomBytes(20).toString('hex');
+    user.resetPasswordExpires = Date.now() + 3600000;
+    await user.save();
+    // 3) Send the user an email with the token in it
+    // TODO: send this via email
+    const resetURL = `http://${req.headers.host}/account/reset/${user.resetPasswordToken}`;
+    req.flash('success', `We\'ve emailed you a password reset link! ${resetURL}`);
+    // 4) Redirect to the login page
+    res.redirect('/login');
+};
+
+const getUserByResetToken = async (token) => {
+    const user = await User.findOne({
+        resetPasswordToken: token,
+        resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    return new Promise(resolve => {
+        resolve(user);
+    });
+};
+
+const handleExpiredToken = (req, res) => {
+    req.flash('error', 'Token is not found or expired');
+    res.redirect('/login');
+}
+
+exports.reset = async (req, res) => {
+    // res.json(req.params.token);
+    const user = await getUserByResetToken(req.params.token);
+    console.log(user);
+    if(!user) {
+        return handleExpiredToken(req, res);
+    }
+
+    return res.render('reset', { title: 'Reset your password', email: user.email });
+};
+
+exports.confirmedPasswords = (req, res, next) => {
+    if(req.body['password'] === req.body['confirm-password']) {
+        return next();
+    }
+    req.flash('error', 'Passwords do not match');
+    return res.redirect('back');
+};
+
+exports.update = async (req, res) => {
+    const user = await getUserByResetToken(req.params.token);
+    console.log(user);
+    if(!user) {
+        return handleExpiredToken(req, res);
+    }
+
+    const setPassword = promisify(user.setPassword, user); // setPassword comes from Passport
+
+    await setPassword(req.body.password);
+
+    // get rid of the token and the expiry
+    user.resetPasswordToken = user.resetPasswordExpires = undefined;
+    const updateUser = await user.save();
+    await req.login(updateUser);
+    req.flash('success', 'You\'re password has been reset! You\'re now logged in!');
+    return res.redirect('/');
 };

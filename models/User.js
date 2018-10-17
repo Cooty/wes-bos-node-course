@@ -22,7 +22,9 @@ const userSchema = new Schema({
         type: String,
         required: 'Please supply a name',
         trim: true,
-    }
+    },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
 });
 
 // Adds a field that's calculated on the fly from existing fields and it's not actually stored
