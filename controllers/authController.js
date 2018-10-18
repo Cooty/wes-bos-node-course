@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const User = mongoose.model('User');
 const crypto = require('crypto');
 const promisify = require('es6-promisify');
+const email = require('../handlers/email');
 
 // This is Wes's original code, the problem with it is that I can't implement
 // dynamic redirects when I want to pass an authentication-only url that
@@ -83,39 +84,48 @@ exports.forgot = async (req, res) => {
     // 3) Send the user an email with the token in it
     // TODO: send this via email
     const resetURL = `http://${req.headers.host}/account/reset/${user.resetPasswordToken}`;
-    req.flash('success', `We\'ve emailed you a password reset link! ${resetURL}`);
+    req.flash('success', `You\'ve been sent a reset email to <em>${user.email}</em>.`);
+    try {
+        await email.send({
+            user,
+            subject: 'Password reset from Dang That\'s delicious',
+            resetURL,
+            filename: 'password-reset', // name of the .pug file that renders the email
+        });
+    } catch (err) {
+        req.flash('error', `An error happened: ${err}`);
+        res.redirect('back');
+    }
     // 4) Redirect to the login page
     res.redirect('/login');
 };
 
-const getUserByResetToken = async (token) => {
+exports.validateToken = async (req, res, next) => {
     const user = await User.findOne({
-        resetPasswordToken: token,
+        resetPasswordToken: req.params.token,
         resetPasswordExpires: { $gt: Date.now() }
     });
 
-    return new Promise(resolve => {
-        resolve(user);
-    });
-};
-
-const handleExpiredToken = (req, res) => {
-    req.flash('error', 'Token is not found or expired');
-    res.redirect('/login');
-}
-
-exports.reset = async (req, res) => {
-    // res.json(req.params.token);
-    const user = await getUserByResetToken(req.params.token);
-    console.log(user);
-    if(!user) {
-        return handleExpiredToken(req, res);
+    if(user) {
+        req.user = user;
+        return next();
+    } else {
+        req.flash('error', 'Token is not found or expired');
+        return res.redirect('/login');
     }
-
-    return res.render('reset', { title: 'Reset your password', email: user.email });
 };
 
-exports.confirmedPasswords = (req, res, next) => {
+exports.reset = (req, res) => {
+    return res.render(
+        'reset',
+        {
+            title: 'Reset your password',
+            email: req.user.email
+        }
+    );
+};
+
+exports.validatePasswordConfirmation = (req, res, next) => {
     if(req.body['password'] === req.body['confirm-password']) {
         return next();
     }
@@ -124,19 +134,13 @@ exports.confirmedPasswords = (req, res, next) => {
 };
 
 exports.update = async (req, res) => {
-    const user = await getUserByResetToken(req.params.token);
-    console.log(user);
-    if(!user) {
-        return handleExpiredToken(req, res);
-    }
-
-    const setPassword = promisify(user.setPassword, user); // setPassword comes from Passport
+    const setPassword = promisify(req.user.setPassword, req.user); // setPassword comes from Passport
 
     await setPassword(req.body.password);
 
     // get rid of the token and the expiry
-    user.resetPasswordToken = user.resetPasswordExpires = undefined;
-    const updateUser = await user.save();
+    req.user.resetPasswordToken = req.user.resetPasswordExpires = undefined;
+    const updateUser = await req.user.save();
     await req.login(updateUser);
     req.flash('success', 'You\'re password has been reset! You\'re now logged in!');
     return res.redirect('/');
