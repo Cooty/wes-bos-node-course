@@ -53,6 +53,7 @@ exports.resize = async (req, res, next) => {
 };
 
 exports.createStore = async (req, res) => {
+    req.body.author = req.user ? req.user._id : false;
     // Because our schema is strict, if someone would post anything else that
     // does not match our schema definitions it just gets thrown away
     const store = await (new Store(req.body)).save(); // instantiate the a new Store which is based on our schema
@@ -68,9 +69,16 @@ exports.getStores = async (req, res) => {
     res.render('stores', { title: 'Stores', stores });
 };
 
+const confirmOwner = (store, user) => {
+    if(!store.author || !store.author.equals(user._id)) {
+        throw Error('You must own a store to be able to edit it!');
+    }
+}
+
 exports.editStore = async (req, res) => {
     const store = await Store.findById(req.params.id);
     // TODO: Verify if the user is allowed to edit this store - needs WebAuthentication...
+    confirmOwner(store, req.user);
     res.render('editStore', {title: `Edit ${store.name}`, store});
 };
 
@@ -96,7 +104,7 @@ exports.updateStore = async (req, res) => {
 };
 
 exports.getStoreBySlug = async (req, res, next) => {
-    const store = await Store.findOne({ slug: req.params.slug });
+    const store = await Store.findOne({ slug: req.params.slug }).populate('author');
     // handle 'not found' stores, since mongoDB will return null if the user enters a non-existing slug
     if(!store) {
         next();

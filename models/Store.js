@@ -41,6 +41,11 @@ const storeSchema = new mongoose.Schema({
         }
     },
     photo: String,
+    author: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User', // name of the Model we want to reference
+        required: 'You must supply an author'
+    }
 });
 
 storeSchema.statics.getTagsList = function() {
