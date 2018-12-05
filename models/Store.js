@@ -48,6 +48,12 @@ const storeSchema = new mongoose.Schema({
     }
 });
 
+// Do indexing
+storeSchema.index({
+    name: 'text',
+    description: 'text',
+});
+
 storeSchema.statics.getTagsList = function() {
     return this.aggregate([
         { $unwind: '$tags' },

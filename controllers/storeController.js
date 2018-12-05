@@ -126,3 +126,19 @@ exports.getStoresByTag = async (req, res) => {
 
     res.render('tag', {tags, title, tag, stores});
 };
+
+exports.searchStores = async (req, res) => {
+    const textScore = { $meta: 'textScore' };
+    const stores = await Store.find({
+        $text: {
+            $search: req.query.q
+        }
+    }, {
+        // we're "projecting" (aka adding) a virtual field to the search
+        // https://docs.mongodb.com/manual/reference/operator/projection/meta/
+        score: textScore
+    }).sort({
+        score: textScore
+    }).limit(5);
+    return res.json(stores);
+};
