@@ -68,6 +68,14 @@ router.post(
 );
 
 // API
-router.get('/api/search', catchErrors(storeController.searchStores));
+router.get(
+    '/api/search',
+    catchErrors(storeController.searchStores)
+);
+
+router.get(
+    '/api/stores/near',
+    catchErrors(storeController.mapStores)
+);
 
 module.exports = router;

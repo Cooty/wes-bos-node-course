@@ -54,6 +54,10 @@ storeSchema.index({
     description: 'text',
 });
 
+storeSchema.index({
+    location: '2dsphere'
+});
+
 storeSchema.statics.getTagsList = function() {
     return this.aggregate([
         { $unwind: '$tags' },
