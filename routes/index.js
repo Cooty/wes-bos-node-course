@@ -80,4 +80,9 @@ router.get(
     catchErrors(storeController.mapStores)
 );
 
+router.post(
+    '/api/stores/:id/heart',
+    catchErrors(storeController.heartStore)
+);
+
 module.exports = router;

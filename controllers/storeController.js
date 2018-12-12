@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Store = mongoose.model('Store');
+const User = mongoose.model('User');
 const multer = require('multer');
 const jimp = require('jimp');
 const uuid = require('uuid');
@@ -173,5 +174,24 @@ exports.mapStores = async (req, res) => {
 };
 
 exports.mapPage = (req, res) => {
-    res.render('map', {title: 'Map'});
+    return res.render('map', {title: 'Map'});
+};
+
+exports.heartStore = async (req, res) => {
+    if(!req.user && !req.user.hearts) {
+        return;
+    }
+    // actually the Schema returns Objects, so the mapped lamdas
+    // will be the Object we defined in the User Schema's Array
+    // since we need a String we just run toString on them, which works thanks to MongoDB
+    const hearts = req.user.hearts.map(obj => obj.toString());
+    const operator = hearts.includes(req.params.id) ? '$pull' : '$addToSet';
+    const user = await User.findByIdAndUpdate(
+            req.user._id,
+            // ES6 computed propertynames
+            { [operator]: { hearts: req.params.id } },
+            // If it's an update then return the new user
+            {new: true},
+        );
+    res.json(user);
 };

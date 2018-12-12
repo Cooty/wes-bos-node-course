@@ -25,6 +25,9 @@ const userSchema = new Schema({
     },
     resetPasswordToken: String,
     resetPasswordExpires: Date,
+    hearts: [
+        { type: mongoose.Schema.ObjectId, ref: 'Store', }
+    ],
 });
 
 // Adds a field that's calculated on the fly from existing fields and it's not actually stored

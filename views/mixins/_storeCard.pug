@@ -12,9 +12,16 @@ mixin storeCard(store = {})
     .store(id=id)
         .store__hero
             .store__actions
-                .store__action.store__action--edit
-                    if user && store.author && store.author.equals(user._id)
-                        a(href=`stores/${_id}/edit`)!= h.icon('pencil')
+                if(user)
+                    - const heartStrings = user.hearts.map(obj => obj.toString())
+                    .store__action.store__action--heart
+                        form(method="POST" action=`/api/stores/${store._id}/heart`)
+                            button(type="submit" name="heart")
+                                != h.icon('heart')
+                if user && store.author && store.author.equals(user._id)
+                    .store__action.store__action--edit
+                        a(href=`stores/${_id}/edit`)
+                            != h.icon('pencil')
             img(src=`/uploads/${photo || 'store.png'}` alt=name)
             h2.title
                 a(href=`/stores/${slug}`)= name
