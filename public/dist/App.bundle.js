@@ -2708,11 +2708,121 @@ var _typeAhead = __webpack_require__(10);
 
 var _typeAhead2 = _interopRequireDefault(_typeAhead);
 
+var _map = __webpack_require__(33);
+
+var _map2 = _interopRequireDefault(_map);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 (0, _autocomplete2.default)((0, _bling.$)('#address'), (0, _bling.$)('#lat'), (0, _bling.$)('#lng'));
 
 (0, _typeAhead2.default)((0, _bling.$)('.search'));
+
+(0, _map2.default)((0, _bling.$)('#map'));
+
+/***/ }),
+/* 32 */,
+/* 33 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _axios = __webpack_require__(12);
+
+var _axios2 = _interopRequireDefault(_axios);
+
+var _bling = __webpack_require__(9);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var defaultLat = 43.2;
+var defaultLng = -79.8;
+
+var mapOptions = {
+    center: {
+        lat: defaultLat,
+        lng: defaultLng
+    },
+    zoom: 10
+};
+
+function loadPlaces(map) {
+    var lat = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultLat;
+    var lng = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : defaultLng;
+
+    _axios2.default.get('/api/stores/near?lat=' + lat + '&lng=' + lng).then(function (results) {
+        var places = results.data;
+
+        if (!results.data.length) {
+            alert('No places found! :(');
+            return;
+        }
+
+        var bounds = new google.maps.LatLngBounds();
+        var infoWindow = new google.maps.InfoWindow();
+
+        var markers = places.map(function (place) {
+            var _place$location$coord = _slicedToArray(place.location.coordinates, 2),
+                placeLng = _place$location$coord[0],
+                placeLat = _place$location$coord[1];
+            // const position = new google.maps.LatLng(placeLat, placeLng);
+
+
+            var position = { lat: placeLat, lng: placeLng };
+            bounds.extend(position);
+            var marker = new google.maps.Marker({ map: map, position: position });
+            // attach all the data of the Place that came from the API to the GMaps Marker
+            // this will be useful for info bubbles
+            marker.place = place;
+            return marker;
+        });
+
+        markers.forEach(function (marker) {
+            return marker.addListener('click', function () {
+                var _place = this.place,
+                    slug = _place.slug,
+                    photo = _place.photo,
+                    name = _place.name,
+                    location = _place.location;
+
+
+                var html = '\n                    <div class="popup">\n                        <a href="/stores/' + slug + '">\n                            <img src="/uploads/' + (photo || 'store.png') + '" alt="A picture from ' + name + '" />\n                            <p>\n                                ' + name + ' - ' + location.address + '\n                            </p>\n                        </a>\n                    </div>\n                ';
+
+                infoWindow.setContent(html);
+                infoWindow.open(map, this);
+            });
+        });
+
+        map.setCenter(bounds.getCenter());
+        map.fitBounds(bounds);
+    });
+}
+
+function makeMap(mapDiv) {
+    if (!mapDiv) return;
+
+    var map = new google.maps.Map(mapDiv, mapOptions);
+    loadPlaces(map);
+
+    var input = (0, _bling.$)('[name="geolocate"]');
+    var autocomplete = new google.maps.places.Autocomplete(input);
+
+    autocomplete.addListener('place_changed', function () {
+        var place = autocomplete.getPlace();
+        loadPlaces(map, place.geometry.location.lat(), place.geometry.location.lng());
+    });
+
+    return { map: map, autocomplete: autocomplete };
+}
+
+exports.default = makeMap;
 
 /***/ })
 /******/ ]);
