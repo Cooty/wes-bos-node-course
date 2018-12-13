@@ -177,8 +177,28 @@ exports.mapPage = (req, res) => {
     return res.render('map', {title: 'Map'});
 };
 
+exports.getHearts = async (req, res) => {
+    if(!req.user || !req.user.hearts) {
+        next();
+        return;
+    }
+
+    const stores = await Store.find({
+        _id: { $in: req.user.hearts }
+    });
+
+    res.render(
+        'stores',
+        {
+            title: 'Hearted Stores',
+            stores
+        }
+    );
+};
+
 exports.heartStore = async (req, res) => {
     if(!req.user && !req.user.hearts) {
+        next();
         return;
     }
     // actually the Schema returns Objects, so the mapped lamdas
