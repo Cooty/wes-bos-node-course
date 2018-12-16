@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const authController = require('../controllers/authController');
 const storeController = require('../controllers/storeController');
 const userController = require('../controllers/userController');
 const reviewController = require('../controllers/reviewController');
@@ -74,6 +75,8 @@ router.get(
     authController.isLoggedIn,
     catchErrors(storeController.getHearts)
 );
+
+console.log(authController);
 
 router.post(
     '/reviews/:id',
