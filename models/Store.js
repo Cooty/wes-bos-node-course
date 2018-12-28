@@ -46,6 +46,9 @@ const storeSchema = new mongoose.Schema({
         ref: 'User', // name of the Model we want to reference
         required: 'You must supply an author'
     }
+}, {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
 });
 
 // Do indexing
@@ -96,5 +99,14 @@ storeSchema.pre('save', async function(next) {
     // TODO: Make sure slugs are unique, now if 2 stores have the same name, then there slugs will overlap
     next(); // like in Middleware we have to tell it to move along in the execution
 });
+
+storeSchema.virtual(
+    'reviews',
+    {
+        ref: 'Review', // what model to link
+        localField: '_id', // look for this field on the 'Store'...
+        foreignField: 'store', // ... and match it with the 'store' field on the 'Review' model
+    }
+);
 
 module.exports = mongoose.model('Store', storeSchema);

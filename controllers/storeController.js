@@ -105,7 +105,9 @@ exports.updateStore = async (req, res) => {
 };
 
 exports.getStoreBySlug = async (req, res, next) => {
-    const store = await Store.findOne({ slug: req.params.slug }).populate('author');
+    const store = await Store.findOne({ 
+        slug: req.params.slug 
+    }).populate('author reviews');
     // handle 'not found' stores, since mongoDB will return null if the user enters a non-existing slug
     if(!store) {
         next();

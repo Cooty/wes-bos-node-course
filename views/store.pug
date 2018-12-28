@@ -1,5 +1,6 @@
 extends layout
 include mixins/_reviewForm
+include mixins/_review
 
 block content
     -
@@ -33,3 +34,21 @@ block content
                                 span.tag__text ##{tag}
             if user
                 +reviewForm(store)
+
+            pre= h.dump(store.reviews)
+            - 
+                store.reviews.sort((a, b) => {
+                    const dateA = h.moment(a).unix();
+                    const dateB = h.moment(a).unix();
+
+                    if(dateA > dateB) {
+                        return -1;
+                    } else {
+                        return 1;
+                    };    
+                })
+            if store.reviews && store.reviews.length 
+                .reviews
+                    each review in store.reviews
+                        .review
+                            +review(review)
