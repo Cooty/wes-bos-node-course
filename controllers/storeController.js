@@ -66,8 +66,26 @@ exports.createStore = async (req, res) => {
 };
 
 exports.getStores = async (req, res) => {
-    const stores = await Store.find();
-    res.render('stores', { title: 'Stores', stores });
+    const page = req.params.page || 1; // the page to show in pagination
+    const limit = 6; // items to show per page
+    const skip = (page * limit) - limit; // number of items skipped before the current page
+    const storesPromise = Store
+        .find()
+        .skip(skip)
+        .limit(limit)
+        .sort({ created: 'desc' });
+    // Nice MongoDB feature - doesn't get all the documents only tells you how much of them
+    // are in the collection
+    const countPromise = Store.count();
+    const [stores, count] = await Promise.all([storesPromise, countPromise]);
+    const pages = Math.ceil(count / limit);
+
+    if(!stores.length && skip) {
+        req.flash('info', `You've asked for page ${page} but that doesn't exist, rederecting to the last existing page...`);
+        return res.redirect(`/stores/page/${pages}`);
+    }
+
+    return res.render('stores', { title: 'Stores', stores, page, count, pages });
 };
 
 const confirmOwner = (store, user) => {
