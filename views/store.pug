@@ -35,7 +35,6 @@ block content
             if user
                 +reviewForm(store)
 
-            pre= h.dump(store.reviews)
             - 
                 store.reviews.sort((a, b) => {
                     const dateA = h.moment(a).unix();

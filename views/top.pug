@@ -1,0 +1,23 @@
+extends layout
+
+block content
+    article.inner
+        h1= title
+
+        table.table
+            thead
+                th Photo
+                th Ranking
+                th Name
+                th Reviews
+                th Average rating
+            each store, i in stores
+                tr
+                    td
+                        a(href=h.makeStoreLink(store))
+                            img(width=200, src=h.getPhoto(store) alt=store.name)
+                    td #{i + 1}
+                    td
+                        a(href=h.makeStoreLink(store))= store.name
+                    td= store.reviews.length
+                    td #{Math.round(store.averageRating * 100) / 100 } / 5  

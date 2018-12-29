@@ -76,12 +76,15 @@ router.get(
     catchErrors(storeController.getHearts)
 );
 
-console.log(authController);
-
 router.post(
     '/reviews/:id',
     authController.isLoggedIn,
     catchErrors(reviewController.add)
+);
+
+router.get(
+    '/top',
+    catchErrors(storeController.getTopList)
 );
 
 // API

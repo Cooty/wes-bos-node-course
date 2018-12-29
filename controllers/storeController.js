@@ -198,6 +198,20 @@ exports.getHearts = async (req, res) => {
     );
 };
 
+exports.getTopList = async (req, res) => {
+    // Rule of Thumb: Any complex query (~ longer then 7-8 lines)
+    // should be outsourced to the model instead of adding it in the controller
+    const stores = await Store.getTopStores();
+
+    return res.render(
+        'top', 
+        {
+            title: `Top ${stores.length} Stores`, 
+            stores
+        }
+    );
+};
+
 exports.heartStore = async (req, res) => {
     if(!req.user && !req.user.hearts) {
         next();

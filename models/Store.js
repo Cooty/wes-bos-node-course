@@ -74,6 +74,46 @@ storeSchema.statics.getTagsList = function() {
     ]);
 };
 
+storeSchema.statics.getTopStores = function() {
+    return this.aggregate([
+        // Lookup stores and populate their reviews
+        {
+            $lookup: {
+                from: 'reviews', // MongoDB lowercases our model and put the plural 's' to it automatically
+                localField: '_id',
+                foreignField: 'store',
+                as: 'reviews', // and that's are custom field name we want to add on and populate (can be anything)
+            } 
+        },
+        // result of $lookup gets passed down to the next operator in the pipeline... 
+        // Filter for items that have at least 2 reviews
+        {
+            $match: {
+                // 'somekey.NUMBER' is the way to access things in MongoDB
+                // that are index based, so we just check if there is a 2nd item
+                'reviews.1': { $exists: true }
+            }
+        },
+        // Add the average reviews field
+        {
+            // Wes is using $project in the original code which just adds the new field
+            // but all other field get lost from the output.
+            // Since I'm using a newer version > 3.4 I can use $addFeilds
+            // which can add the data a field and retain the originals
+            // https://docs.mongodb.com/manual/reference/operator/aggregation/addFields/
+            $addFields: {
+                averageRating: { $avg: '$reviews.rating' } // the $reviews means it's a field beign piped in
+            }
+        },
+        // Sort it based on the average rating
+        {
+            $sort: { averageRating: -1 } // -1 means DESC
+        },
+        // and finally limit it
+        { $limit: 10 }
+    ]);
+};
+
 // Presave hook for MongoDB - stuff to do before saving data
 // we autogenerate 'slug'
 // 2nd argument needs to be a real function instead of an () => {}
@@ -108,5 +148,13 @@ storeSchema.virtual(
         foreignField: 'store', // ... and match it with the 'store' field on the 'Review' model
     }
 );
+
+function autopopulate(next) {
+    this.populate('reviews');
+    next();
+};
+
+storeSchema.pre('find', autopopulate);
+storeSchema.pre('findOne', autopopulate);
 
 module.exports = mongoose.model('Store', storeSchema);
