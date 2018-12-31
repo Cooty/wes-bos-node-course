@@ -60,4 +60,5 @@ scss/.sass-cache/
 # KomodoEdit projectfiles
 *.kpf
 variables.env
-yarn-error.log
+variables.env.now
+*.log
